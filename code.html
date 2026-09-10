@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1e1b18;
+    --bg-elevated: #262220;
+    --bg-elevated-2: #2c2724;
+    --hairline: #3a342f;
+    --paper: #f6f1e7;
+    --paper-line: #e6ddc8;
+    --ink: #2b2622;
+    --ink-soft: #5b5248;
+    --text-muted: #b6ac9e;
+    --text-dim: #7c7468;
+    --amber: #d4a24c;
+    --amber-soft: rgba(212,162,76,0.16);
+    --sage: #8a9b7e;
+    --rust: #b5654b;
+    --slate: #7b8a95;
+    --tan: #b79f6b;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-muted);
+    font-family:var(--sans);
+    overflow:hidden;
+  }
+
+  #app{
+    display:flex;
+    height:100vh;
+    width:100%;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:280px;
+    min-width:280px;
+    background:var(--bg-elevated);
+    border-right:1px solid var(--hairline);
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+
+  .sidebar-head{
+    padding:22px 20px 16px 20px;
+    border-bottom:1px solid var(--hairline);
+  }
+
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin:0 0 16px 0;
+  }
+  .brand-mark{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--amber);
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:19px;
+    color:#efe9dd;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+
+  .new-entry-btn{
+    width:100%;
+    background:var(--amber-soft);
+    color:var(--amber);
+    border:1px solid rgba(212,162,76,0.35);
+    border-radius:6px;
+    padding:9px 12px;
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    transition:background 0.15s ease, border-color 0.15s ease;
+  }
+  .new-entry-btn:hover{
+    background:rgba(212,162,76,0.26);
+    border-color:rgba(212,162,76,0.55);
+  }
+  .new-entry-btn:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:2px;
+  }
+
+  .search-wrap{
+    padding:14px 20px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .search-wrap input{
+    width:100%;
+    background:var(--bg-elevated-2);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+    padding:8px 10px;
+    color:var(--text-muted);
+    font-family:var(--sans);
+    font-size:13px;
+  }
+  .search-wrap input::placeholder{color:var(--text-dim);}
+  .search-wrap input:focus{
+    outline:none;
+    border-color:var(--tan);
+  }
+
+  .entry-list{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 0 20px 0;
+  }
+  .entry-list::-webkit-scrollbar{width:8px;}
+  .entry-list::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:4px;}
+
+  .month-heading{
+    font-size:11px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    padding:16px 20px 6px 20px;
+  }
+
+  .entry-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:9px 20px;
+    cursor:pointer;
+    border-left:2px solid transparent;
+    position:relative;
+  }
+  .entry-row:hover{ background:var(--bg-elevated-2); }
+  .entry-row.active{
+    background:var(--bg-elevated-2);
+    border-left-color:var(--amber);
+  }
+  .entry-mood-dot{
+    width:7px;height:7px;border-radius:50%;
+    margin-top:6px;
+    flex-shrink:0;
+  }
+  .entry-row-text{ min-width:0; flex:1; }
+  .entry-row-date{
+    font-size:12.5px;
+    color:#d8d0c2;
+    font-weight:500;
+  }
+  .entry-row-snippet{
+    font-size:12px;
+    color:var(--text-dim);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top:1px;
+  }
+  .entry-delete{
+    opacity:0;
+    background:none;border:none;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:14px;
+    padding:2px 4px;
+    border-radius:4px;
+    flex-shrink:0;
+  }
+  .entry-row:hover .entry-delete{opacity:1;}
+  .entry-delete:hover{ color:var(--rust); background:rgba(181,101,75,0.15); }
+
+  .empty-list{
+    padding:24px 20px;
+    font-size:13px;
+    color:var(--text-dim);
+    line-height:1.5;
+  }
+
+  /* ---------- Main ---------- */
+  .main{
+    flex:1;
+    height:100%;
+    overflow-y:auto;
+    display:flex;
+    justify-content:center;
+    padding:56px 32px 40px 32px;
+  }
+  .main::-webkit-scrollbar{width:10px;}
+  .main::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:5px;}
+
+  .page{
+    width:100%;
+    max-width:660px;
+    height:fit-content;
+  }
+
+  .page-date{
+    font-family:var(--serif);
+    font-size:15px;
+    color:var(--text-dim);
+    margin-bottom:18px;
+  }
+
+  .paper{
+    background:var(--paper);
+    border-radius:3px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.2), 0 12px 30px rgba(0,0,0,0.28);
+    padding:44px 48px 30px 48px;
+    display:flex;
+    flex-direction:column;
+    min-height:520px;
+  }
+
+  .mood-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:26px;
+  }
+  .mood-label{
+    font-family:var(--sans);
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-right:6px;
+  }
+  .mood-dot{
+    width:16px;height:16px;
+    border-radius:50%;
+    border:2px solid transparent;
+    cursor:pointer;
+    padding:0;
+    position:relative;
+  }
+  .mood-dot[data-selected="true"]{
+    border-color:var(--ink);
+  }
+  .mood-dot:focus-visible{ outline:2px solid var(--ink-soft); outline-offset:2px; }
+
+  #editor{
+    flex:1;
+    width:100%;
+    border:none;
+    resize:none;
+    background:transparent;
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:18px;
+    line-height:1.7;
+    outline:none;
+  }
+  #editor::placeholder{ color:#a89f8f; }
+
+  .page-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-top:1px solid var(--paper-line);
+    margin-top:20px;
+    padding-top:14px;
+    font-family:var(--sans);
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .save-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .save-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--sage);
+  }
+  .save-dot.saving{ background:var(--tan); }
+  .save-dot.error{ background:var(--rust); }
+
+  .empty-state{
+    max-width:520px;
+    margin:80px auto 0 auto;
+    text-align:center;
+  }
+  .empty-state .glow{
+    width:36px;height:36px;
+    margin:0 auto 22px auto;
+    border-radius:50%;
+    background:radial-gradient(circle at center, rgba(212,162,76,0.6), rgba(212,162,76,0) 70%);
+  }
+  .empty-state h2{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:26px;
+    color:#efe9dd;
+    margin:0 0 10px 0;
+  }
+  .empty-state p{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin:0 0 26px 0;
+  }
+  .empty-state button{
+    background:var(--amber-soft);
+    color:var(--amber);
+    border:1px solid rgba(212,162,76,0.35);
+    border-radius:6px;
+    padding:10px 18px;
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .empty-state button:hover{ background:rgba(212,162,76,0.26); }
+
+  @media (max-width: 760px){
+    #app{ flex-direction:column; }
+    .sidebar{ width:100%; min-width:0; height:auto; max-height:40vh; border-right:none; border-bottom:1px solid var(--hairline); }
+    .main{ padding:28px 16px; }
+    .paper{ padding:28px 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <h1>Journal</h1>
+      </div>
+      <button class="new-entry-btn" id="newEntryBtn">+ New entry</button>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search entries" />
+    </div>
+    <div class="entry-list" id="entryList"></div>
+  </aside>
+
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const MOODS = [
+  { id: 'great', label: 'Great', color: '#8a9b7e' },
+  { id: 'good',  label: 'Good',  color: '#d4a24c' },
+  { id: 'okay',  label: 'Okay',  color: '#b79f6b' },
+  { id: 'low',   label: 'Low',   color: '#7b8a95' },
+  { id: 'rough', label: 'Rough', color: '#b5654b' },
+];
+
+let index = [];       // [{id, createdAt, updatedAt, mood, snippet}]
+let currentId = null;
+let currentEntry = null;
+let searchTerm = '';
+let saveTimer = null;
+let saveState = 'saved'; // saved | saving | error
+
+const entryListEl = document.getElementById('entryList');
+const mainEl = document.getElementById('main');
+const searchInput = document.getElementById('searchInput');
+const newEntryBtn = document.getElementById('newEntryBtn');
+
+function uid(){
+  return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function moodInfo(id){
+  return MOODS.find(m => m.id === id) || null;
+}
+
+function formatDayHeader(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+function formatShortDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+}
+function monthKey(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month:'long', year:'numeric' });
+}
+function snippetFrom(content){
+  const clean = (content || '').trim().replace(/\s+/g,' ');
+  if(!clean) return 'Empty entry';
+  return clean.length > 70 ? clean.slice(0,70) + '…' : clean;
+}
+
+async function loadIndex(){
+  try{
+    const raw = localStorage.getItem('journal:entries-index');
+    index = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    index = [];
+  }
+}
+
+async function saveIndex(){
+  try{
+    localStorage.setItem('journal:entries-index', JSON.stringify(index));
+  }catch(e){ /* index save failure is non-fatal to current session */ }
+}
+
+async function loadEntry(id){
+  try{
+    const raw = localStorage.getItem('journal:entry:' + id);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    return null;
+  }
+}
+
+async function saveEntry(entry){
+  localStorage.setItem('journal:entry:' + entry.id, JSON.stringify(entry));
+}
+
+async function deleteEntry(id){
+  try{ localStorage.removeItem('journal:entry:' + id); }catch(e){}
+  index = index.filter(m => m.id !== id);
+  await saveIndex();
+}
+
+function renderList(){
+  const term = searchTerm.trim().toLowerCase();
+  const filtered = term
+    ? index.filter(m => m.snippet.toLowerCase().includes(term))
+    : index;
+
+  const sorted = [...filtered].sort((a,b) => b.createdAt - a.createdAt);
+
+  entryListEl.innerHTML = '';
+
+  if(sorted.length === 0){
+    const div = document.createElement('div');
+    div.className = 'empty-list';
+    div.textContent = index.length === 0
+      ? 'No entries yet. Start your first one.'
+      : 'No entries match your search.';
+    entryListEl.appendChild(div);
+    return;
+  }
+
+  let lastMonth = null;
+  sorted.forEach(meta => {
+    const mk = monthKey(meta.createdAt);
+    if(mk !== lastMonth){
+      const h = document.createElement('div');
+      h.className = 'month-heading';
+      h.textContent = mk;
+      entryListEl.appendChild(h);
+      lastMonth = mk;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'entry-row' + (meta.id === currentId ? ' active' : '');
+    row.tabIndex = 0;
+
+    const dot = document.createElement('div');
+    dot.className = 'entry-mood-dot';
+    const mi = moodInfo(meta.mood);
+    dot.style.background = mi ? mi.color : 'transparent';
+    dot.style.border = mi ? 'none' : '1px solid ' + '#5b5248';
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'entry-row-text';
+    const dateEl = document.createElement('div');
+    dateEl.className = 'entry-row-date';
+    dateEl.textContent = formatShortDate(meta.createdAt);
+    const snipEl = document.createElement('div');
+    snipEl.className = 'entry-row-snippet';
+    snipEl.textContent = meta.snippet;
+    textWrap.appendChild(dateEl);
+    textWrap.appendChild(snipEl);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'entry-delete';
+    delBtn.setAttribute('aria-label', 'Delete entry');
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      if(confirm('Delete this entry? This cannot be undone.')){
+        await deleteEntry(meta.id);
+        if(currentId === meta.id){
+          currentId = null;
+          currentEntry = null;
+        }
+        renderList();
+        renderMain();
+      }
+    });
+
+    row.appendChild(dot);
+    row.appendChild(textWrap);
+    row.appendChild(delBtn);
+
+    row.addEventListener('click', () => openEntry(meta.id));
+    row.addEventListener('keydown', (ev) => {
+      if(ev.key === 'Enter') openEntry(meta.id);
+    });
+
+    entryListEl.appendChild(row);
+  });
+}
+
+async function openEntry(id){
+  const entry = await loadEntry(id);
+  if(!entry) return;
+  currentId = id;
+  currentEntry = entry;
+  saveState = 'saved';
+  renderList();
+  renderMain();
+}
+
+function renderMain(){
+  mainEl.innerHTML = '';
+
+  if(!currentEntry){
+    const wrap = document.createElement('div');
+    wrap.className = 'empty-state';
+    wrap.innerHTML = `
+      <div class="glow"></div>
+      <h2>What's on your mind today?</h2>
+      <p>Your entries are saved as you type, right here, for only you to read.</p>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = 'Start writing';
+    btn.addEventListener('click', createEntry);
+    wrap.appendChild(btn);
+    mainEl.appendChild(wrap);
+    return;
+  }
+
+  const page = document.createElement('div');
+  page.className = 'page';
+
+  const dateEl = document.createElement('div');
+  dateEl.className = 'page-date';
+  dateEl.textContent = formatDayHeader(currentEntry.createdAt);
+  page.appendChild(dateEl);
+
+  const paper = document.createElement('div');
+  paper.className = 'paper';
+
+  const moodRow = document.createElement('div');
+  moodRow.className = 'mood-row';
+  const label = document.createElement('span');
+  label.className = 'mood-label';
+  label.textContent = 'Feeling';
+  moodRow.appendChild(label);
+  MOODS.forEach(m => {
+    const dot = document.createElement('button');
+    dot.className = 'mood-dot';
+    dot.style.background = m.color;
+    dot.setAttribute('aria-label', m.label);
+    dot.setAttribute('data-selected', currentEntry.mood === m.id ? 'true' : 'false');
+    dot.title = m.label;
+    dot.addEventListener('click', () => {
+      currentEntry.mood = currentEntry.mood === m.id ? null : m.id;
+      renderMain();
+      scheduleSave();
+    });
+    moodRow.appendChild(dot);
+  });
+  paper.appendChild(moodRow);
+
+  const editor = document.createElement('textarea');
+  editor.id = 'editor';
+  editor.placeholder = 'Start writing…';
+  editor.value = currentEntry.content || '';
+  editor.addEventListener('input', () => {
+    currentEntry.content = editor.value;
+    updateFooter();
+    scheduleSave();
+  });
+  paper.appendChild(editor);
+
+  const footer = document.createElement('div');
+  footer.className = 'page-footer';
+  footer.id = 'pageFooter';
+  paper.appendChild(footer);
+
+  page.appendChild(paper);
+  mainEl.appendChild(page);
+
+  updateFooter();
+  editor.focus();
+}
+
+function wordCount(text){
+  const trimmed = (text || '').trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+function updateFooter(){
+  const footer = document.getElementById('pageFooter');
+  if(!footer) return;
+  const wc = wordCount(currentEntry ? currentEntry.content : '');
+  const statusText = saveState === 'saving' ? 'Saving…' : saveState === 'error' ? "Couldn't save" : 'Saved';
+  const dotClass = saveState === 'saving' ? 'saving' : saveState === 'error' ? 'error' : '';
+  footer.innerHTML = '';
+  const wcEl = document.createElement('div');
+  wcEl.textContent = wc + (wc === 1 ? ' word' : ' words');
+  const statusEl = document.createElement('div');
+  statusEl.className = 'save-status';
+  statusEl.innerHTML = `<span class="save-dot ${dotClass}"></span><span>${statusText}</span>`;
+  footer.appendChild(wcEl);
+  footer.appendChild(statusEl);
+}
+
+function scheduleSave(){
+  saveState = 'saving';
+  updateFooter();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(commitSave, 500);
+}
+
+async function commitSave(){
+  if(!currentEntry) return;
+  currentEntry.updatedAt = Date.now();
+  try{
+    await saveEntry(currentEntry);
+    const meta = index.find(m => m.id === currentEntry.id);
+    if(meta){
+      meta.snippet = snippetFrom(currentEntry.content);
+      meta.mood = currentEntry.mood;
+      meta.updatedAt = currentEntry.updatedAt;
+      await saveIndex();
+    }
+    saveState = 'saved';
+  }catch(e){
+    saveState = 'error';
+  }
+  updateFooter();
+  renderList();
+}
+
+async function createEntry(){
+  const now = Date.now();
+  const entry = {
+    id: uid(),
+    createdAt: now,
+    updatedAt: now,
+    mood: null,
+    content: ''
+  };
+  index.push({
+    id: entry.id,
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
+    mood: entry.mood,
+    snippet: 'Empty entry'
+  });
+  try{
+    await saveEntry(entry);
+    await saveIndex();
+  }catch(e){}
+  currentId = entry.id;
+  currentEntry = entry;
+  saveState = 'saved';
+  renderList();
+  renderMain();
+}
+
+newEntryBtn.addEventListener('click', createEntry);
+searchInput.addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  renderList();
+});
+
+(async function init(){
+  await loadIndex();
+  renderList();
+  renderMain();
+})();
+</script>
+</body>
+</html>
